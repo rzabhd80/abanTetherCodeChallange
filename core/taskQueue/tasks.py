@@ -3,6 +3,8 @@ import random
 
 from pybreaker import CircuitBreakerError
 
+from core.models.celery_tasks_status import TaskStatus
+from core.models.order import Order
 from core.taskQueue.celery_queue import configure_celery
 from services.task_status_service import TaskStatusService, OrderStatusService
 from core.taskQueue.circut_breaker import setup_circuit_breaker
@@ -49,3 +51,25 @@ def perform_exchange_buy(currency: str, amount: float):
     return {"status": "success", "bought": amount, "currency": currency} if random_num == 1 else {"status": "failed",
                                                                                                   "bought": amount,
                                                                                                   "currency": currency}
+
+
+@celery_app.task
+def retry_failed_tasks():
+    session = Session()
+    try:
+        failed_tasks = session.query(TaskStatus).filter(
+            TaskStatus.status.in_(["FAILED", "CIRCUIT_OPEN"]),
+            TaskStatus.retries < 3,
+            TaskStatus.last_retry < datetime.utcnow() - timedelta(minutes=5)
+        ).all()
+
+        for task in failed_tasks:
+            order = session.query(Order).filter_by(id=task.id).first()
+            if order:
+                buy_from_exchange.apply_async((order.id, order.currency, order.amount))
+                task.retries += 1
+                task.last_retry = datetime.utcnow()
+
+        session.commit()
+    finally:
+        session.close()
