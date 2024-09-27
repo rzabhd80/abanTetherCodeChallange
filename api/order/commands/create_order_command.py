@@ -1,5 +1,5 @@
 class CreateOrderCommand:
-    def __init__(self, user_id: int, currency: str, amount: float):
+    def __init__(self, user_id: int, amount: float):
         self.user_id = user_id
-        self.currency = currency
+        self.currency = "ABAN"
         self.amount = amount
