@@ -1,8 +1,14 @@
 # ABAN Currency Order Processing Service
 
+## Important Notice 
+due to lack of time and meeting the deadline, Application services were not tested.
+
+
 This project implements a financial service that handles placing and processing orders in ABAN currency, with specific
 rules around small orders and bulk processing. It is built using Python, Celery, SQLAlchemy, and PostgreSQL, ensuring
 robust transaction handling and task retry logic for failed tasks.
+
+
 
 ## Features
 
@@ -79,5 +85,5 @@ celery -A <project_name> worker --loglevel=info
 
 # known issues
 
-Due to time constraints, Docker and Docker Compose deployment were not tested. While a Dockerfile and a Compose setup
+Due to time constraints, application services were not tested. While a Dockerfile and a Compose setup
 are provided, further validation is needed to ensure proper deployment
