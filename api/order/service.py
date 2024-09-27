@@ -1,5 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.order.commands.create_order_command import CreateOrderCommand
+from api.order.handlers.create_order_handler import CreateOrderHandler
 from core.database.database import DatabaseConfig
 from core.mediator.mediator import Mediator
 from core.taskQueue.tasks import retry_failed_tasks

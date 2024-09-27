@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 wsgi:app
+    ports:
+      - "5000:5000"
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - redis
+    networks:
+      - aban_network
+
+
+  celery_worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: celery -A app.celery worker --loglevel=info
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - redis
+    networks:
+      - aban_network
+
+
+  celery_beat:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: celery -A app.celery beat --loglevel=info
+    env_file:
+      - ../.env
+    volumes:
+      - ./celerybeat-schedule:/celerybeat-schedule
+    depends_on:
+      - db
+      - redis
+    networks:
+      - aban_network
+
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aban_network
+
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - aban_network
+
+
+volumes:
+  postgres_data:
+
+
+networks:
+  aban_network:
+    driver: bridge
